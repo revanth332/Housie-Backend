@@ -74,7 +74,7 @@ io.on("connection", (socket) => {
   console.log("A user connected");
 
   socket.on("housie", (number, role, roomNo,genNums) => {
-    io.emit("housie", number, roomNo,genNums,roomUsers[roomNo],rooms.includes(roomNo));
+    io.emit("housie", number, roomNo,genNums,roomUsers[roomNo]);
   });
 
   socket.on("disconnect", () => {
