@@ -33,9 +33,9 @@ app.post("/api/room", (req, res) => {
   if (type === "createRoom") {
     if (!rooms.includes(roomCode)) {
       rooms.push(roomCode);
-      roomUsers[roomCode] = [username];
+      roomUsers[roomCode] = [{username,micAllowed:false}];
       console.log("room created"+roomCode);
-      return res.json({ success: true, room: roomCode,users:[username] });
+      return res.json({ success: true, room: roomCode,users:[{username,micAllowed:false}] });
     } else {
       console.log([...rooms]);
       return res.json({
@@ -47,7 +47,7 @@ app.post("/api/room", (req, res) => {
   } else {
     if (rooms.includes(roomCode)) {
       if(!roomUsers[roomCode].includes(username)){
-        roomUsers[roomCode].push(username);
+        roomUsers[roomCode].push({username,micAllowed:false});
         console.log("user entered ")
         return res.json({ success: true, room: roomCode,users:roomUsers[roomCode] });
       }
@@ -81,14 +81,27 @@ io.on("connection", (socket) => {
     console.log("User disconnected");
   });
 
-  socket.on('audioStream', (audioData,room) => { 
-    socket.broadcast.emit('audioStream', audioData,room);
+  socket.on('audioStream', (audioData,room,username) => {
+    // console.log("roomUsers : ",roomUsers,"room : ",room,"user : ",roomUsers[room])
+    const user = roomUsers[room].find(item => item.username === username);
+    console.log(user)
+    if(user.micAllowed) socket.broadcast.emit('audioStream', audioData,room,username);
     // console.log(room+"jk")/
   });
 
   socket.on("entered",(role,room,username) => {
     console.log(role,room,username)
     socket.broadcast.emit('entered', role,room,username);
+  })
+
+  socket.on("win",(user,room) => {
+    socket.broadcast.emit("win",user,room);
+  })
+
+  socket.on("micAllowed",(username,room,isAllowed) => {
+    // console.log("room: "+room,"users: "+roomUsers[room])
+    roomUsers[room] = roomUsers[room].map(user => user.username === username ? ({...user,micAllowed:isAllowed}) : user)
+    socket.broadcast.emit("micAllowed",username,room,isAllowed);
   })
 
   socket.on("exit",(user,room,role) => {
@@ -98,10 +111,11 @@ io.on("connection", (socket) => {
     }
     else if(role === "guest"){
       console.log(roomUsers[room])
-      roomUsers[room] = roomUsers[room].filter(username => user != username);
+      roomUsers = {...roomUsers,[room]:roomUsers[room].filter(item => user != item.username)}; // modifying.....
+      console.log("after exiting ",roomUsers[room])
     }
     socket.broadcast.emit("exit",user,room,role);
-    console.log("username : "+user,"room : "+room)
+    console.log("username : "+user,"room : "+room +" exited")
   })
 
 });
