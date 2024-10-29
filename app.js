@@ -95,6 +95,23 @@ io.on("connection", (socket) => {
     socket.broadcast.emit('entered', role,room,roomUsers[room]);
   })
 
+  socket.on("counter",(counterVal,room) => {
+    socket.broadcast.emit("counter",counterVal,room)
+  })
+
+  socket.on("jaldi5",(user,room) => {
+    console.log(user,"jaldi5")
+    socket.broadcast.emit("jaldi5",user,room);
+  })
+  socket.on("row1Complete",(user,room) => {
+    socket.broadcast.emit("row1Complete",user,room);
+  })
+  socket.on("row2Complete",(user,room) => {
+    socket.broadcast.emit("row2Complete",user,room);
+  })
+  socket.on("row3Complete",(user,room) => {
+    socket.broadcast.emit("row3Complete",user,room);
+  })
   socket.on("win",(user,room) => {
     socket.broadcast.emit("win",user,room);
   })
