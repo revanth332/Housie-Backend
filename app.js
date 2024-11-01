@@ -73,67 +73,52 @@ app.post("/api/room", (req, res) => {
 io.on("connection", (socket) => {
   // console.log("A user connected");
 
-  socket.on("housie", (number, role, roomNo,genNums) => {
-    io.emit("housie", number, roomNo,genNums,roomUsers[roomNo]);
+  socket.on("housie", (newHousie,currentUser) => {
+    io.emit("housie", newHousie,currentUser);
   });
 
   socket.on("disconnect", () => {
     // console.log("User disconnected");
   });
 
-  socket.on('audioStream', (audioData,room,username) => {
-    // console.log("roomUsers : ",roomUsers,"room : ",room,"user : ",roomUsers[room])
-    const user = roomUsers[room].find(item => item.username === username);
-    // console.log(user)
-    if(user.micAllowed) socket.broadcast.emit('audioStream', audioData,room,username);
-    // console.log(room+"jk")/
+  socket.on('audioStream', (audioData,currentUser) => {
+    if(currentUser.info.micAllowed) socket.broadcast.emit('audioStream', audioData,currentUser);
   });
 
-  socket.on("entered",(role,room,username) => {
-    // console.log(role,room,username)
-    // console.log("users aftered entered : ",roomUsers[room])
-    socket.broadcast.emit('entered', role,room,roomUsers[room]);
+  socket.on("entered",(newwHousie) => {
+    socket.broadcast.emit('entered', newwHousie);
   })
 
-  socket.on("counter",(counterVal,room) => {
-    socket.broadcast.emit("counter",counterVal,room)
-  })
-
-  socket.on("jaldi5",(user,room) => {
+  socket.on("jaldi5Complete",(currentUser) => {
     console.log(user,"jaldi5")
-    socket.broadcast.emit("jaldi5",user,room);
+    socket.broadcast.emit("jaldi5",currentUser);
   })
-  socket.on("row1Complete",(user,room) => {
-    socket.broadcast.emit("row1Complete",user,room);
-  })
-  socket.on("row2Complete",(user,room) => {
-    socket.broadcast.emit("row2Complete",user,room);
-  })
-  socket.on("row3Complete",(user,room) => {
-    socket.broadcast.emit("row3Complete",user,room);
-  })
-  socket.on("win",(user,room) => {
-    socket.broadcast.emit("win",user,room);
+  
+  socket.on("row1Complete",(currentUser) => {
+    socket.broadcast.emit("row1Complete",currentUser);
   })
 
-  socket.on("micAllowed",(username,room,isAllowed) => {
-    // console.log("room: "+room,"users: "+roomUsers[room])
-    roomUsers[room] = roomUsers[room].map(user => user.username === username ? ({...user,micAllowed:isAllowed}) : user)
-    socket.broadcast.emit("micAllowed",username,room,isAllowed);
+  socket.on("row2Complete",(currentUser) => {
+    socket.broadcast.emit("row2Complete",currentUser);
   })
 
-  socket.on("exit",(user,room,role) => {
-    if(role === "host"){
-      rooms = rooms.filter(roomNo => roomNo != room);
-      delete roomUsers[room];
+  socket.on("row3Complete",(currentUser) => {
+    socket.broadcast.emit("row3Complete",currentUser);
+  })
+
+  socket.on("win",(currentUser) => {
+    socket.broadcast.emit("win",currentUser);
+  })
+
+  socket.on("exit",( newHousie,currentUser) => {
+    if(currentUser.info.isAdmin){
+      rooms = rooms.filter(roomNo => roomNo != newHousie.roomNumber);
+      delete roomUsers[newHousie.roomNumber];
     }
-    else if(role === "guest"){
-      // console.log(roomUsers[room])
-      roomUsers = {...roomUsers,[room]:roomUsers[room]?.filter(item => user != item.username)}; // modifying.....
-      // console.log("after exiting ",roomUsers[room])
+    else{
+      roomUsers = {...roomUsers,[newHousie.roomNumber]:roomUsers[newHousie.roomNumber]?.filter(item => user != item.username)}; // modifying.....
     }
-    socket.broadcast.emit("exit",roomUsers[room],room,role);
-    // console.log("username : "+user,"room : "+room +" exited")
+    socket.broadcast.emit("exit",newHousie,currentUser);
   })
 
 });
