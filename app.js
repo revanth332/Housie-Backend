@@ -125,10 +125,20 @@ io.on("connection", (socket) => {
   });
 
   socket.on("micAllow",(newHousie) => {
+    roomUsers = {
+      ...roomUsers,
+      [newHousie.roomNumber]: newHousie.participants
+    };
     socket.broadcast.emit("micAllow",newHousie)
   })
 
   socket.on("ticketUpdate",(newTicketCount,selectedUser,newHousie,generatedTickets) => {
+    roomUsers = {
+      ...roomUsers,
+      [newHousie.roomNumber]: roomUsers[newHousie.roomNumber]?.map(
+        (item) => selectedUser === item.username ? {...item,ticketCount: newTicketCount} : item
+      ),
+    };
     socket.broadcast.emit("ticketUpdate",newTicketCount,selectedUser,newHousie,generatedTickets)
   })
 
