@@ -96,8 +96,13 @@ io.on("connection", (socket) => {
   // console.log("A user connected");
 
   socket.on("housie", (newHousie, currentUser) => {
-    console.log(newHousie.participants)
-    io.emit("housie", newHousie, currentUser);
+    // console.log(newHousie.participants)
+    if(rooms.length === 0){
+      io.emit("cancel",newHousie.roomNumber);
+    }
+    else{
+      io.emit("housie", newHousie, currentUser);
+    }
   });
 
   socket.on("disconnect", () => {
@@ -105,8 +110,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("audioStream", (audioData, currentUser) => {
-    if (currentUser.info.micAllowed)
+    if (currentUser.info.micAllowed){
       socket.broadcast.emit("audioStream", audioData, currentUser);
+    }
   });
 
   socket.on("entered", (newHousie, newUser) => {
@@ -127,7 +133,8 @@ io.on("connection", (socket) => {
   })
 
   socket.on("jaldi5Complete", (newHousie,currentUser) => {
-    socket.broadcast.emit("jaldi5", newHousie,currentUser);
+    // console.log()
+    socket.broadcast.emit("jaldi5Complete", newHousie,currentUser);
   });
 
   socket.on("row1Complete", (newHousie,currentUser) => {
@@ -142,12 +149,12 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("row3Complete", newHousie,currentUser);
   });
 
-  socket.on("win", (newHousie,currentUser) => {
-    socket.broadcast.emit("win", newHousie,currentUser);
+  socket.on("win", (currentUser) => {
+    socket.broadcast.emit("win", currentUser);
   });
 
   socket.on("exit", (newHousie, currentUser) => {
-    console.log(newHousie.participants);
+    // console.log(newHousie.participants);
     if (currentUser.info.isAdmin) {
       rooms = rooms.filter((roomNo) => roomNo != newHousie.roomNumber);
       delete roomUsers[newHousie.roomNumber];
